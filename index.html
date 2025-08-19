@@ -44,7 +44,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ latitude, longitude })
         })
-        .then(res => res.json().catch(() => ({})))
+        .then(res => res.json())
         .then(data => {
           if (data.status === "ok") {
             alert("تم إرسال الموقع بنجاح.");
